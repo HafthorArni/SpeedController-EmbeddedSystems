@@ -3,7 +3,7 @@
 Timer_msec::Timer_msec()
 {
 }
-void Timer_msec::init(float period_ms)
+void Timer_msec::init(int period_ms)
 {
     TCCR1A = 0; // set timer1 to normal operation (all bits in control registers A and B set to zero)
     TCCR1B = 0; //
@@ -15,7 +15,7 @@ void Timer_msec::init(float period_ms)
     TCCR1B |= (1 << CS12) | (1 << CS10);
 
 }
-void Timer_msec::init(float period_ms, float duty_cycle)
+void Timer_msec::init(int period_ms, float duty_cycle)
 {
     TCCR1A = 0; // set timer1 to normal operation (all bits in control registers A and B set to zero)
     TCCR1B = 0; //
