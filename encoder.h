@@ -17,7 +17,7 @@ class Encoder {
     int old_pos;
     unsigned long current_time;
     unsigned long last_time;
-    float speed_in_rpm; 
+    double speed_in_rpm; 
 };
 
 #endif // ENCODER_H

@@ -1,54 +1,64 @@
 #include "digital_in.h"
 #include "digital_out.h"
 #include "encoder.h"
-#include "timer_msec.h"
-#include "analog_out.h"
-#include <avr/interrupt.h>
 #include <util/delay.h>
 #include <Arduino.h>
+#include "timer_msec.h"
+#include "analog_out.h"
 #include "P_controller.h"
 
 Timer_msec timer;
-Analog_out motorIN1(1);  // PWM pin D9
-Digital_out motorIN2(0); //     pin D8
-Encoder encoder(3, 4);   // Assuming C1 is connected to pin 3 and C2 is connected to pin 4
+Digital_out motorIN2(0); //         pin D8
+Analog_out motorIN1(1);  // PWM     pin D9
+Encoder encoder(3, 4);   // encoder pin D11 D12
+P_controller controller(0.5);
 
-P_controller controller(0.01);
-int main()
-{
-    double ref = 40;
-    Serial.begin(115200);
-    timer.init(0.1);
-    encoder.init();
+int analogPin = A3; 
+double ref = 0;
+double actual = 0;
+double pwmValue = 0;
 
-    motorIN2.set_lo();
-    motorIN1.init(10);  // ms
-    motorIN1.set(0);  // duty cycle
-    double currentPWM = 0;
+int main(){  
+    init();// Initialize Arduino framework
+    Serial.begin(115200);  
+    timer.init(0.1); // ms
     sei();  // enable interrupts
 
+    encoder.init();
+    motorIN2.init();
+    motorIN1.init(0.1);  // ms
+    motorIN1.set(0);  // duty cycle
+    motorIN2.set_lo();
+    
+    
+
     while(1){
-        //Serial.print(encoder.speed());
-        //Serial.println(" RPM ");
-        double pwmValue = controller.update(ref, encoder.speed());
-        currentPWM += pwmValue;
-        Serial.println(currentPWM);
-        Serial.print(encoder.speed());
-        motorIN1.set(currentPWM);
+        ref = (analogRead(analogPin)/1023.0)*120;
+        actual = encoder.speed();
+        pwmValue = controller.update(ref, actual);
+        pwmValue = constrain(pwmValue, 0.0, 0.999); // Ensure pwmValue is within [0, 1]
+        
+        motorIN1.set(pwmValue);
+        Serial.print("speed: (");
+        Serial.print("Ref: ");
+        Serial.print(ref);
+        Serial.print(" - Act: ");
+        Serial.print(actual);
+        Serial.print(") [RPM], ");
+        Serial.print(" duty cycle: ");
+        Serial.println(pwmValue);
+        
         _delay_ms(100);
     }
+    return 0;
 }
 
-ISR(TIMER1_COMPA_vect)
-{
-    motorIN1.pin.set_hi();
+ISR(TIMER1_COMPA_vect){
     encoder.update();
-    //double speed = encoder.speed();
-
+    motorIN1.pin.set_hi();      
 }
 
-ISR(TIMER1_COMPB_vect)
-{
-    motorIN1.pin.set_lo();
+ISR(TIMER1_COMPB_vect){
     encoder.update();
+    motorIN1.pin.set_lo(); 
 }
