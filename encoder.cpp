@@ -6,6 +6,12 @@ Encoder::Encoder(int pin1, int pin2) : c1(pin1), c2(pin2), pos(0), last_c1(false
     current_time = 0;
     last_time = 0;
     speed_in_rpm = 0;
+
+    DDRD &= ~(1 << DDD2);
+    PORTD |= (1 << PORTD2);
+    EICRA |= (1 << ISC00);
+    EIMSK |= (1 << INT0);
+    sei();
 }
 
 void Encoder::init() {

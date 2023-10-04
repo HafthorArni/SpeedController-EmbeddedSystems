@@ -36,3 +36,15 @@ void Timer_msec::set_duty_cycle(float duty_cycle)
     OCR1B = OCR1A * duty_cycle;
     TIMSK1 |= (1 << OCIE1B); // set interrupt on compare match B
 }
+
+void Timer_msec::initTimer2(int period_ms)
+{
+    TCCR2A = 0; // set timer2 to normal operation (all bits in control registers A and B set to zero)
+    TCCR2B = 0; // 
+    TCNT2 = 0; // initialize counter value to 0
+    OCR2A = (16000000 / 1024) * (period_ms / 1000.0) - 1; // Set the compare value for Timer2
+    
+    TCCR2B |= (1 << WGM22); // clear the timer on compare match A
+    TIMSK2 |= (1 << OCIE2A); // set interrupt on compare match A for Timer2
+    TCCR2B |= (1 << CS22) | (1 << CS21) | (1 << CS20); // set prescaler to 1024 and start the timer
+}
