@@ -5,14 +5,19 @@
 #include <Arduino.h>
 #include "timer_msec.h"
 #include "analog_out.h"
-#include "P_controller.h"
+#include "PI_controller.h"
+// #include "P_controller.h"
+
 
 Timer_msec timer;
 Digital_out motorIN2(0); //         pin D8
 Analog_out motorIN1(1);  // PWM     pin D9
 Encoder encoder(3, 4);   // encoder pin D11 D12
-float kp = 0.015;
-P_controller controller(kp);
+float kp = 0.01;
+float ti = 5;
+PI_controller controller(kp,ti);
+// P_controller controller(kp);
+
 
 
 unsigned long lastPrintTime = 0;
@@ -25,7 +30,7 @@ double u = 0;
 
 int main(){  
     init();// Initialize Arduino framework
-    Serial.begin(9600);  
+    Serial.begin(115200);  
     timer.init(0.1); // ms
     sei();  // enable interrupts
 
@@ -37,12 +42,12 @@ int main(){
     
     while(1){
         ref = (analogRead(analogPin)/1023.0)*120;
-        actual = encoder.speed();
+        actual = abs(encoder.speed());
         u = controller.update(ref, actual);
-        pwmValue = constrain(u, 0.0, 0.999); // Ensure pwmValue is within [0, 1]
-
+        u = constrain(u, 0.0, 0.999); // Ensure pwmValue is within [0, 1]
+        pwmValue = u;
         motorIN1.set(pwmValue);
-        if (millis() - lastPrintTime >= 1000) {  
+        if (millis() - lastPrintTime >= 250) {  
             Serial.print("speed: (");
             Serial.print("Ref: ");
             Serial.print(ref);
@@ -56,7 +61,8 @@ int main(){
             lastPrintTime = millis();  
         }
         encoder.update();
-    }
+        _delay_ms(3);
+}
     return 0;
 }
 
