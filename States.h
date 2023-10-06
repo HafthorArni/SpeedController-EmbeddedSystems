@@ -1,9 +1,11 @@
 #include <Arduino.h>
 #include <State.h>
+#include <analog_out.h>
 bool pre;
 bool op;
 bool flt;
 char c;
+Analog_out led(5);
 
 class Initialization : public State {
     public:
@@ -15,6 +17,8 @@ class Initialization : public State {
     void on_entry() override
     {
         Serial.println("Turning off LED");
+        led.init(10000.0);
+        led.pin.set_lo();
         Serial.println("Initializing c");
         Serial.println("Setting pre = false");
         pre = false;
@@ -57,6 +61,7 @@ class PreOperational : public State
     void on_entry() override
     {
         Serial.println("Blinking LED at 1 Hz");
+        led.set(0.1);
         Serial.println("Setting pre = true");
         pre = true;
     }
@@ -92,6 +97,7 @@ class Operational : public State
     void on_entry() override
     {
         Serial.println("Turning on LED");
+        led.pin.set_hi();
         Serial.println("Setting pre = false");
         pre = false;
     }
@@ -124,7 +130,8 @@ class Stopped : public State {
     }
     void on_entry() override
     {
-        Serial.println("Blinking LED at 1 Hz");
+        Serial.println("Blinking LED at 2 Hz");
+        led.set(0.2);
     }
     void on_exit() override
     {
